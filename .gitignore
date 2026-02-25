@@ -30,3 +30,8 @@ Thumbs.db
 # Logs
 *.log
 npm-debug.log*
+
+# Healthcare app data (personal health data)
+data/uploads/
+data/sessions/
+data/reports/
