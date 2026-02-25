@@ -190,18 +190,28 @@ healthcare/
 
 ### Feature 1: PDF Upload & Parsing
 
-**Purpose:** Extract structured glucose data from a mixed-format PDF (tables + charts).
+**Purpose:** Extract structured glucose data from a Dexcom Clarity PDF export.
+
+**Source Format (Dexcom Clarity "Daily" view):**
+- One page per day, newest day first, with a glucose chart and data table
+- Table columns: **Time | Device | Event | Details | Insulin Units | Glucose**
+- Event types: "Meal" (all food entries) and "Walking" (exercise)
+- Exercise details format: "33 min • 88 BPM"
+- Glucose values format: "117 mg/dL"
+- Device is always "CGM"
+- 14 days of data typically included; first page may be an incomplete current day
 
 **Operations:**
 - Accept PDF file upload via Streamlit file_uploader
 - Parse tables using pdfplumber, page by page
-- Identify glucose data columns (date, time, reading, food/meal)
-- Skip chart-only pages
-- Return structured data as list of GlucoseEntry objects
+- Extract date header from each page (e.g., "Sun, Feb 22, 2026")
+- Parse each table row into a GlucoseEntry
+- Separate "Meal" events from "Walking" events
+- Return structured data as list of GlucoseEntry and ExerciseEntry objects
 
 **Key Details:**
-- Parser is configurable (column names, positions) for tuning to specific PDF formats
-- Handles edge cases: merged cells, multi-line entries, missing values
+- Parser targets the specific Dexcom Clarity layout (known columns, known structure)
+- Exercise entries are stored separately (different data shape)
 - Validates all entries with Pydantic before displaying
 
 ### Feature 2: Date Range Selection
@@ -228,11 +238,21 @@ healthcare/
 
 **Purpose:** Replace the paper mood template with digital entry.
 
+**Mood Template Structure (4 time slots per day):**
+- **After Breaking Fast** — time (from first meal), energy (text), mood (1-5)
+- **Around Noon** — time (default 12:00 PM), energy (text), mood (1-5)
+- **After Dinner** — time (from last meal), energy (text), mood (1-5)
+- **Before Bed** — time (optional), energy (text), mood (1-5)
+
+**Energy values:** Free text (e.g., "Tired", "Ok", "Good", "Great")
+**Mood values:** Numeric scale 1-5
+
 **Operations:**
-- Render form fields based on the mood template structure
-- One form per selected date
+- Render form with 4 time slots per day for each selected date
+- Pre-populate times from glucose data where possible (first meal → After Breaking Fast, last meal → After Dinner)
+- Energy as text input or dropdown with common values
+- Mood as numeric selector (1-5)
 - Save entries to session JSON
-- Fields TBD based on user's mood template PDF
 
 ### Feature 5: AI Chat Agent
 
@@ -246,13 +266,22 @@ healthcare/
 
 ### Feature 6: Report Generation
 
-**Purpose:** Generate the final PDF report for the user's advisor.
+**Purpose:** Generate the final PDF report ("5-Day Food, Energy, and Mood Journal") for the user's advisor.
+
+**Output Format:**
+- Title: "5-Day Food, Energy, and Mood Journal"
+- Header: Name, date range, source PDF filename
+- One section per day (newest first), each with a table:
+  - Columns: **Event | Time of Day | Details | Energy | Mood**
+  - Mood rows (After Breaking Fast, Around Noon, After Dinner, Before Bed) interleaved with food/exercise entries at the correct time positions
+  - Meal types corrected (Breakfast, Lunch, Dinner, Snack — not "Meal")
+  - Exercise entries included
 
 **Operations:**
-- Combine glucose + mood data into the report template
-- Generate PDF using ReportLab
+- Combine glucose + mood data, ordered by time within each day
+- Interleave mood time-slot rows at their correct positions
+- Generate PDF using ReportLab matching the report structure above
 - Preview before download
-- Template structure stored in JSON for easy modification
 - Download button for the generated PDF
 
 ---
@@ -438,13 +467,13 @@ The MVP is successful when the user can complete their full reporting workflow w
 
 - [Design Document](docs/plans/2026-02-24-healthcare-report-assistant-design.md) — Approved architectural design
 
-### Pending User Inputs
+### Sample Files (Provided)
 
-The following items are needed from the user to complete implementation:
+All sample files are in `docs/samples/`:
 
-1. **Sample glucose monitoring PDF** — Required to tune the PDF parser
-2. **Mood template PDF** — Required to define mood entry form fields
-3. **Final output report example** — Required to replicate the report format in ReportLab
+1. **`clarity_2026-02-18_to_2026-02-22.pdf`** — Dexcom Clarity glucose export (14 days, 11 pages, Daily view)
+2. **`mood_intake_2026-02-18_to_2026-02-22.md`** — Mood intake worksheet template (markdown)
+3. **`report_2026-02-18_to_2026-02-22.md`** — Final output report example (markdown → will generate as PDF)
 
 ### Key Dependencies
 

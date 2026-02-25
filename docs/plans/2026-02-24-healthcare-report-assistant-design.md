@@ -63,23 +63,33 @@ healthcare/
 
 ## Data Models
 
-### GlucoseEntry
-- `date`: date of reading
-- `time`: time of reading
-- `glucose_reading`: mg/dL value
-- `food_item`: what was eaten
-- `meal_type`: breakfast / lunch / dinner / snack (user-corrected)
-- `notes`: additional info from PDF
+### GlucoseEntry (parsed from Dexcom Clarity PDF)
+- `date`: date of reading (e.g., "2026-02-22")
+- `time`: time of reading (e.g., "9:40 AM")
+- `glucose_reading`: integer, mg/dL value (e.g., 117)
+- `food_item`: string, what was eaten (e.g., "Egg omelette, salad, cottage cheese, bruschetta blueberries")
+- `meal_type`: enum — breakfast / lunch / dinner / snack (user-corrected; source PDF always says "Meal")
 
-### MoodEntry
+### ExerciseEntry (parsed from Dexcom Clarity PDF)
+- `date`: date of exercise
+- `time`: time of exercise (e.g., "10:56 AM")
+- `activity_type`: string (e.g., "Walking")
+- `duration_minutes`: integer (e.g., 33)
+- `heart_rate_bpm`: integer (e.g., 88)
+- `glucose_reading`: integer, mg/dL value at time of exercise
+
+### MoodEntry (4 per day, matching mood template time slots)
 - `date`: date of entry
-- `time`: time of entry
-- Additional fields TBD based on the user's mood template PDF
+- `time_slot`: enum — after_breaking_fast / around_noon / after_dinner / before_bed
+- `time`: time string (e.g., "9:40 AM", or "Not available" for before_bed)
+- `energy`: string (e.g., "Tired", "Ok", "Good", "Great")
+- `mood`: integer 1-5
 
 ### ReportSession
 - `date_range_start`, `date_range_end`: overall range
 - `selected_dates`: specific days to include (typically 5)
 - `glucose_entries[]`: list of GlucoseEntry
+- `exercise_entries[]`: list of ExerciseEntry
 - `mood_entries[]`: list of MoodEntry
 - `status`: draft / finalized
 
