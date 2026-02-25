@@ -1,0 +1,32 @@
+# Environment secrets
+.env
+.env.local
+.env.production
+
+# Dependencies
+node_modules/
+__pycache__/
+.venv/
+
+# Build output
+dist/
+build/
+.next/
+out/
+
+# IDE and editor files
+.vscode/
+.idea/
+*.swp
+*.swo
+
+# OS files
+.DS_Store
+Thumbs.db
+
+# Claude Code local settings (may contain personal tokens)
+.claude/settings.local.json
+
+# Logs
+*.log
+npm-debug.log*
