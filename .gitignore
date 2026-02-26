@@ -37,3 +37,4 @@ npm-debug.log*
 data/uploads/
 data/sessions/
 data/reports/
+e2e-screenshots/

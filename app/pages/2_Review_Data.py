@@ -14,7 +14,11 @@ if "current_session_id" not in st.session_state:
     st.stop()
 
 session_id = st.session_state["current_session_id"]
-session = load_session(session_id)
+try:
+    session = load_session(session_id)
+except FileNotFoundError:
+    st.error("Session file not found. Please return to the Home page and create a new session.")
+    st.stop()
 
 st.info(f"Session: **{session.name}** ({session.date_range_start} to {session.date_range_end})")
 
@@ -104,4 +108,7 @@ with col1:
 
 with col2:
     if st.button("Continue to Mood Entry"):
-        st.switch_page("pages/3_Mood_Entry.py")
+        if not df.equals(edited_df):
+            st.warning("You have unsaved changes. Please click 'Save Corrections' first.")
+        else:
+            st.switch_page("pages/3_Mood_Entry.py")

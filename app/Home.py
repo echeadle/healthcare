@@ -29,16 +29,22 @@ with st.form("new_session_form"):
     submitted = st.form_submit_button("Start New Session")
 
 if submitted and session_name:
-    session = ReportSession.create_new(
-        name=session_name,
-        date_range_start=str(date_start),
-        date_range_end=str(date_end),
-        selected_dates=[],
-    )
-    save_session(session)
-    st.session_state["current_session_id"] = session.id
-    st.success(f"Session '{session_name}' created! Navigate to Upload to continue.")
-    st.rerun()
+    if date_end < date_start:
+        st.error("End date must be on or after start date.")
+    else:
+        session = ReportSession.create_new(
+            name=session_name,
+            date_range_start=str(date_start),
+            date_range_end=str(date_end),
+            selected_dates=[],
+        )
+        save_session(session)
+        st.session_state["current_session_id"] = session.id
+        st.session_state["_session_created"] = session_name
+        st.rerun()
+
+if st.session_state.pop("_session_created", None):
+    st.success(f"Session created! Navigate to Upload to continue.")
 
 st.divider()
 

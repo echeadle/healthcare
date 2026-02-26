@@ -1,4 +1,4 @@
-from pathlib import Path
+from pathlib import Path, PurePosixPath
 
 import streamlit as st
 
@@ -15,7 +15,11 @@ if "current_session_id" not in st.session_state:
     st.stop()
 
 session_id = st.session_state["current_session_id"]
-session = load_session(session_id)
+try:
+    session = load_session(session_id)
+except FileNotFoundError:
+    st.error("Session file not found. Please return to the Home page and create a new session.")
+    st.stop()
 
 st.info(f"Session: **{session.name}**")
 
@@ -26,7 +30,8 @@ if uploaded_file is not None:
     # Save uploaded file to data/uploads/
     uploads_dir = Path("data/uploads")
     uploads_dir.mkdir(parents=True, exist_ok=True)
-    pdf_path = uploads_dir / uploaded_file.name
+    safe_name = PurePosixPath(uploaded_file.name).name
+    pdf_path = uploads_dir / safe_name
     pdf_path.write_bytes(uploaded_file.getvalue())
 
     # Parse PDF (cache result to avoid re-parsing on rerun)
